@@ -1,0 +1,12 @@
+__pycache__/
+.venv/
+/data/
+/.env
+/backups/
+/.env.*
+*.sqlite3
+*.sqlite3-*
+/*.zip
+/*.tar.gz
+/deploy/*.tar.gz
+/.idea/

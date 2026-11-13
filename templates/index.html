@@ -1,0 +1,242 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#f4f5ef">
+  <title>空闲教室</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+  <script defer src="{{ url_for('static', filename='app.js') }}"></script>
+</head>
+<body>
+  <header class="topbar">
+    <div class="topbar-inner">
+      <a class="brand" href="#query" aria-label="空闲教室首页">
+        <span class="brand-mark" aria-hidden="true"><span></span><span></span><span></span><span></span></span>
+        <span>空闲教室</span>
+      </a>
+      <nav aria-label="主要功能">
+        <a href="#query" data-panel="query" aria-current="page">查询</a>
+        <a href="#schedule" data-panel="schedule">教室课表</a>
+        <a href="#import" data-panel="import">导入课表</a>
+        <a href="#settings" data-panel="settings">学期设置</a>
+      </nav>
+    </div>
+  </header>
+
+  <main class="shell">
+    <p id="startup-error" class="notice error" role="alert" hidden></p>
+
+    <section id="query-panel" aria-labelledby="query-title">
+      <div class="page-heading">
+        <div>
+          <h1 id="query-title">查找教室</h1>
+          <p id="query-date" class="subtitle"></p>
+        </div>
+        <button id="today-button" class="button button-outline" type="button" disabled>回到今天</button>
+      </div>
+
+      <div class="query-layout">
+        <form id="filters" class="card filters" aria-label="查询条件">
+          <div class="time-fields">
+            <label class="field" for="week">
+              <span>教学周</span>
+              <select id="week" name="week"><option value="">选择教学周</option></select>
+            </label>
+            <div class="period-fields">
+              <label class="field" for="start-period">
+                <span>起始节次</span>
+                <select id="start-period"><option value="">全天</option></select>
+              </label>
+              <label class="field" for="end-period">
+                <span>结束节次</span>
+                <select id="end-period" disabled><option value="">—</option></select>
+              </label>
+            </div>
+          </div>
+
+          <fieldset class="weekdays">
+            <legend>星期</legend>
+            <div id="weekday-options" class="weekday-options">
+              <label><input type="radio" name="weekday" value="1" aria-label="星期一"><span aria-hidden="true">一</span></label>
+              <label><input type="radio" name="weekday" value="2" aria-label="星期二"><span aria-hidden="true">二</span></label>
+              <label><input type="radio" name="weekday" value="3" aria-label="星期三"><span aria-hidden="true">三</span></label>
+              <label><input type="radio" name="weekday" value="4" aria-label="星期四"><span aria-hidden="true">四</span></label>
+              <label><input type="radio" name="weekday" value="5" aria-label="星期五"><span aria-hidden="true">五</span></label>
+              <label><input type="radio" name="weekday" value="6" aria-label="星期六"><span aria-hidden="true">六</span></label>
+              <label><input type="radio" name="weekday" value="7" aria-label="星期日"><span aria-hidden="true">日</span></label>
+            </div>
+          </fieldset>
+
+          <div class="filter-options">
+            <details>
+              <summary><span>教室</span><span id="room-summary" class="option-summary">全部教室</span></summary>
+              <p class="help">未勾选时查询全部教室。</p>
+              <div id="rooms" class="check-list" role="group" aria-label="选择教室"></div>
+            </details>
+            <details>
+              <summary><span>课程</span><span id="course-summary" class="option-summary">只查空闲</span></summary>
+              <p class="help">勾选课程后，也显示排有这些课程的教室。</p>
+              <div id="courses" class="check-list" role="group" aria-label="选择课程"></div>
+            </details>
+          </div>
+        </form>
+
+        <section class="results" aria-labelledby="results-title">
+          <div class="results-heading">
+            <h2 id="results-title">查询结果</h2>
+            <p id="result-status" class="help" role="status"></p>
+          </div>
+          <div id="result-content" class="result-content"><p class="card placeholder">正在加载课表…</p></div>
+        </section>
+      </div>
+    </section>
+
+    <section id="schedule-panel" aria-labelledby="schedule-title" hidden>
+      <div class="page-heading">
+        <div>
+          <h1 id="schedule-title">教室课表</h1>
+          <p id="schedule-date" class="subtitle"></p>
+        </div>
+        <button id="schedule-refresh" class="button button-outline" type="button">刷新课表</button>
+      </div>
+
+      <div id="schedule-layout" class="query-layout">
+        <form id="schedule-filters" class="card filters schedule-filters" aria-label="课表查询条件">
+          <div class="schedule-room-field">
+            <label class="field" for="schedule-room"><span>教室</span><select id="schedule-room" name="room"></select></label>
+            <button id="room-rename-open" class="button button-outline" type="button" disabled>修改教室名称</button>
+          </div>
+          <label class="field" for="schedule-week"><span>教学周</span><select id="schedule-week" name="week"></select></label>
+          <label class="field" for="schedule-view"><span>视图</span><select id="schedule-view" name="view"><option value="day">按日</option><option value="week">按周</option></select></label>
+          <label id="schedule-weekday-field" class="field" for="schedule-weekday"><span>星期</span><select id="schedule-weekday" name="weekday"></select></label>
+        </form>
+        <section class="results" aria-labelledby="schedule-results-title">
+          <div class="results-heading"><h2 id="schedule-results-title">全天课表</h2></div>
+          <div id="schedule-content" class="result-content" aria-live="polite"><p class="card placeholder">正在加载课表…</p></div>
+        </section>
+      </div>
+    </section>
+
+    <section id="import-panel" aria-labelledby="import-title" hidden>
+      <div class="page-heading">
+        <div>
+          <h1 id="import-title">导入课表</h1>
+          <p class="subtitle">每间教室一份 CSV，可以同时选择多份文件。</p>
+        </div>
+        <a class="button button-outline" href="/template.csv" download>下载 CSV 模板</a>
+      </div>
+
+      <form id="import-form" class="card content-card">
+        <div class="upload-label">
+          <label class="upload-title" for="csv-files">添加 CSV 文件</label>
+          <div class="help" id="file-format">
+            <p>表头 <code>课程名,星期,节次,周次</code></p>
+            <p>示例 <code>电力电子技术,1,1-2,"1-5,7-12"</code></p>
+          </div>
+          <input id="csv-files" type="file" accept=".csv,text/csv" multiple aria-describedby="file-format">
+        </div>
+        <div id="import-rows" class="import-rows"></div>
+        <div class="form-actions">
+          <button id="preview-button" class="button button-primary" type="submit" disabled>预览导入</button>
+        </div>
+      </form>
+
+      <p id="import-status" class="notice" role="status" hidden></p>
+      <section id="import-preview" class="card content-card" aria-labelledby="preview-title" hidden>
+        <h2 id="preview-title">导入预览</h2>
+        <div id="preview-list" class="preview-list"></div>
+        <div class="form-actions">
+          <button id="import-button" class="button button-primary" type="button" disabled>确认导入</button>
+        </div>
+      </section>
+    </section>
+
+    <section id="settings-panel" aria-labelledby="settings-title" hidden>
+      <div class="page-heading">
+        <div>
+          <h1 id="settings-title">学期设置</h1>
+          <p class="subtitle">设置起始日、教学周数和课表上的节次组。</p>
+        </div>
+      </div>
+
+      <form id="settings-form" class="card content-card settings-card">
+        <div class="settings-fields">
+          <label class="field" for="term-start"><span>第 1 周的周一</span><input id="term-start" type="date" required></label>
+          <label class="field" for="term-weeks"><span>教学周数</span><input id="term-weeks" type="number" min="1" step="1" required></label>
+          <label class="field group-setting" for="term-groups">
+            <span>节次组</span>
+            <input id="term-groups" type="text" required aria-describedby="groups-help">
+            <span class="help" id="groups-help">用逗号分开各组，例如 1-2,3-4,5-6,7-8,9-10。</span>
+          </label>
+        </div>
+        <div class="form-actions"><button id="settings-save" class="button button-primary" type="submit">保存设置</button></div>
+        <p id="settings-status" class="notice" role="status" hidden></p>
+      </form>
+
+      <section class="card content-card reset-card" aria-labelledby="reset-title">
+        <div>
+          <h2 id="reset-title">更换学期</h2>
+          <p class="help">先在上方填写新学期的设置。确认更换后会清空现有教室和课表。</p>
+        </div>
+        <button id="reset-open" class="button button-danger" type="button">更换学期</button>
+      </section>
+    </section>
+  </main>
+
+  <dialog id="room-rename-dialog" aria-labelledby="room-rename-title">
+    <h2 id="room-rename-title">修改教室名称</h2>
+    <form id="room-rename-form">
+      <label class="field" for="room-rename-value"><span>教室名称</span><input id="room-rename-value" type="text" required></label>
+      <p id="room-rename-error" class="notice error" role="alert" hidden></p>
+      <div class="form-actions">
+        <button id="room-rename-cancel" class="button button-outline" type="button">取消</button>
+        <button class="button button-primary" type="submit">保存名称</button>
+      </div>
+    </form>
+  </dialog>
+
+  <dialog id="csv-edit-dialog" aria-labelledby="csv-edit-title">
+    <h2 id="csv-edit-title">在线修改</h2>
+    <p id="csv-edit-name" class="help"></p>
+    <ul id="csv-edit-issues" class="preview-errors"></ul>
+    <form id="csv-edit-form">
+      <label class="field" for="csv-edit-text">
+        <span>CSV 内容</span>
+        <textarea id="csv-edit-text" rows="12" wrap="off" spellcheck="false" required aria-describedby="csv-edit-help"></textarea>
+      </label>
+      <p id="csv-edit-help" class="help">保留表头「课程名,星期,节次,周次」，使用英文逗号分隔。保存后会重新预览。</p>
+      <p id="csv-edit-encoding" class="help" hidden></p>
+      <div class="form-actions">
+        <button id="csv-edit-cancel" class="button button-outline" type="button">取消</button>
+        <button class="button button-primary" type="submit">保存并重新预览</button>
+      </div>
+    </form>
+  </dialog>
+
+  <dialog id="edit-dialog" aria-labelledby="edit-title">
+    <h2 id="edit-title">编辑课程</h2>
+    <p id="edit-context" class="help"></p>
+    <form id="edit-form">
+      <div id="edit-periods" class="edit-periods"></div>
+      <p class="help">留空表示该节空闲。</p>
+      <p id="edit-error" class="notice error" role="alert" hidden></p>
+      <div class="form-actions">
+        <button id="edit-cancel" class="button button-outline" type="button">取消</button>
+        <button class="button button-primary" type="submit">保存课程</button>
+      </div>
+    </form>
+  </dialog>
+
+  <dialog id="reset-dialog" aria-labelledby="reset-confirm-title">
+    <h2 id="reset-confirm-title">确认更换学期？</h2>
+    <p id="reset-description"></p>
+    <p id="reset-error" class="notice error" role="alert" hidden></p>
+    <form method="dialog" class="form-actions">
+      <button id="reset-cancel" class="button button-outline" autofocus>取消</button>
+      <button id="reset-confirm" class="button button-danger" type="button">清空课表并更换</button>
+    </form>
+  </dialog>
+  <noscript><p class="notice error">请启用浏览器的 JavaScript 后使用空闲教室查询。</p></noscript>
+</body>
+</html>

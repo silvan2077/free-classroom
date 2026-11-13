@@ -1,0 +1,12 @@
+.git/
+.venv/
+**/__pycache__/
+**/*.pyc
+.env
+data/
+backups/
+*.zip
+*.tar.gz
+**/*.sqlite3*
+docs/
+tests/
